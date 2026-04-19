@@ -1,16 +1,16 @@
 def generate_code(answers, model, llm_handler):
+    lang = answers['language'].lower()
     prompt = [
         {
             "role": "system",
             "content": (
-                "You are an expert code generator. Generate complete, well-commented code as per user requirements.\n"
-                "You MUST respond using EXACTLY this format:\n\n"
-                "<<CODE>>\n"
-                "[put only the generated, runnable code here — no prose, no markdown fences]\n"
-                "<</CODE>>\n\n"
-                "<<NOTES>>\n"
-                "[explain your implementation choices, how it works, and any usage notes]\n"
-                "<</NOTES>>"
+                f"You are an expert code generator. Generate complete, well-commented {answers['language']} code.\n"
+                "Respond in EXACTLY this format — no deviations:\n\n"
+                f"```{lang}\n"
+                "<generated code only here>\n"
+                "```\n\n"
+                "**How It Works:**\n"
+                "<explain your implementation choices, how it works, and any usage notes>"
             )
         },
         {

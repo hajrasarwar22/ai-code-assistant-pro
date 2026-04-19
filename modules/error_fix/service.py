@@ -3,14 +3,13 @@ def fix_code_error(code, error_desc, model, llm_handler):
         {
             "role": "system",
             "content": (
-                "You are a professional code assistant. Fix the user's code and explain the root cause.\n"
-                "You MUST respond using EXACTLY this format:\n\n"
-                "<<CODE>>\n"
-                "[put only the corrected, runnable code here — no prose, no markdown fences]\n"
-                "<</CODE>>\n\n"
-                "<<NOTES>>\n"
-                "[put the root cause explanation and what you changed here]\n"
-                "<</NOTES>>"
+                "You are a professional code assistant. Fix the user's broken code.\n"
+                "Respond in EXACTLY this format — no deviations:\n\n"
+                "```python\n"
+                "<corrected code only here>\n"
+                "```\n\n"
+                "**Root Cause & Explanation:**\n"
+                "<explain what was wrong, what you changed, and why — plain text or bullet points>"
             )
         },
         {

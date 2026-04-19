@@ -1,7 +1,12 @@
 import streamlit as st
 from core.llm_handler import LLMHandler
 from core.config import GROQ_MODELS
-from utils.helpers import syntax_highlight
+
+LANG_SLUG = {
+    "Python": "python", "JavaScript": "javascript", "TypeScript": "typescript",
+    "Java": "java", "C++": "cpp", "Go": "go", "Rust": "rust",
+    "SQL": "sql", "Bash": "bash", "Other": "text"
+}
 
 
 def _explain_code(code, depth, audience, lang, llm_handler):
@@ -10,33 +15,29 @@ def _explain_code(code, depth, audience, lang, llm_handler):
         "Detailed Line-by-Line": "Explain each logical block and key line in detail.",
         "Deep Dive (Advanced)": "Provide expert-level analysis including time complexity, design patterns, and improvements.",
     }
-
     aud_map = {
         "Beginner": "Use simple language, avoid jargon, use analogies.",
         "Intermediate": "Assume basic programming knowledge.",
         "Expert": "Use technical terminology freely.",
     }
-
     prompt = [
         {
             "role": "system",
             "content": (
                 f"You are a world-class code educator. Explain {lang} code clearly. "
                 f"{depth_map[depth]} {aud_map[audience]} "
-                "Structure: Overview, Key Components, Logic Flow, Issues."
+                "Structure your explanation with: Overview, Key Components, Logic Flow, Issues/Improvements."
             )
         },
         {
             "role": "user",
-            "content": f"```{lang}\n{code}\n```"
+            "content": f"```{LANG_SLUG.get(lang, 'text')}\n{code}\n```"
         },
     ]
-
     return llm_handler.ask(prompt, temperature=0.3, max_tokens=2048)
 
 
 def code_explain_view():
-    # Hero
     st.markdown("""
     <div class="hero hero-blue">
         <div class="hero-title">🔵 Code Explainer</div>
@@ -44,148 +45,74 @@ def code_explain_view():
     </div>
     """, unsafe_allow_html=True)
 
-    # Config
     cc1, cc2, cc3 = st.columns(3)
-
     with cc1:
-        st.markdown("""
-        <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
+        st.markdown("""<div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
             letter-spacing:.16em;text-transform:uppercase;margin-bottom:.4rem;">
-            ◈ &nbsp;Language
-        </div>
-        """, unsafe_allow_html=True)
-
-        lang = st.selectbox(
-            "lang",
-            ["Python", "JavaScript", "TypeScript", "Java", "C++", "Go", "Rust", "SQL", "Bash", "Other"],
-            label_visibility="hidden",
-            key="exp_lang"
-        )
+            ◈ &nbsp;Language</div>""", unsafe_allow_html=True)
+        lang = st.selectbox("lang", list(LANG_SLUG.keys()), label_visibility="hidden", key="exp_lang")
 
     with cc2:
-        st.markdown("""
-        <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
+        st.markdown("""<div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
             letter-spacing:.16em;text-transform:uppercase;margin-bottom:.4rem;">
-            ◈ &nbsp;Explanation Depth
-        </div>
-        """, unsafe_allow_html=True)
-
-        depth = st.selectbox(
-            "depth",
-            ["Quick Overview", "Detailed Line-by-Line", "Deep Dive (Advanced)"],
-            label_visibility="hidden",
-            key="exp_depth"
-        )
+            ◈ &nbsp;Explanation Depth</div>""", unsafe_allow_html=True)
+        depth = st.selectbox("depth",
+                             ["Quick Overview", "Detailed Line-by-Line", "Deep Dive (Advanced)"],
+                             label_visibility="hidden", key="exp_depth")
 
     with cc3:
-        st.markdown("""
-        <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
+        st.markdown("""<div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
             letter-spacing:.16em;text-transform:uppercase;margin-bottom:.4rem;">
-            ◈ &nbsp;Audience Level
-        </div>
-        """, unsafe_allow_html=True)
+            ◈ &nbsp;Audience Level</div>""", unsafe_allow_html=True)
+        audience = st.selectbox("aud", ["Beginner", "Intermediate", "Expert"],
+                                index=1, label_visibility="hidden", key="exp_aud")
 
-        audience = st.selectbox(
-            "aud",
-            ["Beginner", "Intermediate", "Expert"],
-            index=1,
-            label_visibility="hidden",
-            key="exp_aud"
-        )
-
-    # Form
     with st.form("code_explain_form"):
-        st.markdown("""
-        <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
+        st.markdown("""<div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
             letter-spacing:.16em;text-transform:uppercase;margin-bottom:.4rem;">
-            ◈ &nbsp;Code to Explain
-        </div>
-        """, unsafe_allow_html=True)
-
-        code = st.text_area(
-            "code",
-            height=240,
-            placeholder="# paste any code here...",
-            label_visibility="hidden"
-        )
+            ◈ &nbsp;Code to Explain</div>""", unsafe_allow_html=True)
+        code = st.text_area("code", height=240,
+                            placeholder="# paste any code here...",
+                            label_visibility="hidden")
 
         c1, c2 = st.columns([3, 1])
-
         with c2:
-            st.markdown("""
-            <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
+            st.markdown("""<div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
                 letter-spacing:.16em;text-transform:uppercase;margin-bottom:.4rem;">
-                ◈ &nbsp;Model
-            </div>
-            """, unsafe_allow_html=True)
-
-            # ✅ FIXED: Using GROQ_MODELS from config
+                ◈ &nbsp;Model</div>""", unsafe_allow_html=True)
             model_options = GROQ_MODELS
             default_model = st.session_state.get("default_model", GROQ_MODELS[0])
-            
-            # Safe index lookup
             try:
                 idx = model_options.index(default_model)
             except ValueError:
                 idx = 0
-            
-            model = st.selectbox(
-                "model",
-                model_options,
-                index=idx,
-                label_visibility="hidden"
-            )
+            model = st.selectbox("model", model_options, index=idx, label_visibility="hidden")
 
         submitted = st.form_submit_button("🔍 Explain Code", use_container_width=False)
 
-    # Processing
     if submitted and code:
         llm = LLMHandler(model)
-
-        with st.spinner(""):
-            st.markdown("""
-            <div style="display:flex;align-items:center;gap:.8rem;
-                font-family:'Fira Code',monospace;font-size:.76rem;color:#8B5CF6;padding:.7rem 0;">
-                <div class="ti">
-                    <span style="background:#2563EB"></span>
-                    <span style="background:#2563EB"></span>
-                    <span style="background:#2563EB"></span>
-                </div>
-                Analyzing code structure and logic...
-            </div>
-            """, unsafe_allow_html=True)
-
+        with st.spinner("Analyzing code structure and logic..."):
             result = _explain_code(code, depth, audience, lang, llm)
 
         t1, t2 = st.tabs(["🔍 Explanation", "📄 Original Code"])
 
         with t1:
-            st.markdown(f"""
-            <div class="rh">
+            st.markdown(f"""<div class="rh">
                 <div class="rb rb-p"></div>
                 <span class="rl">Explanation</span>
                 <span class="badge bp" style="margin-left:.4rem;">{depth}</span>
                 <span class="badge bp">{audience}</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-            st.write(result)
+            </div>""", unsafe_allow_html=True)
+            st.markdown(result)
 
         with t2:
-            st.markdown("""
-            <div class="rh">
+            st.markdown("""<div class="rh">
                 <div class="rb rb-p"></div>
                 <span class="rl">Your Code</span>
-            </div>
-            """, unsafe_allow_html=True)
-
-            st.markdown(
-                syntax_highlight(code, language=lang.lower()),
-                unsafe_allow_html=True
-            )
+            </div>""", unsafe_allow_html=True)
+            st.code(code, language=LANG_SLUG.get(lang, "text"))
 
     elif submitted and not code:
-        st.markdown(
-            '<div class="ie">⚠ Please paste code to explain.</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown('<div class="ie">⚠ Please paste code to explain.</div>',
+                    unsafe_allow_html=True)

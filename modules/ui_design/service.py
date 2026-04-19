@@ -3,14 +3,13 @@ def generate_ui_design(user_idea, model, llm_handler):
         {
             "role": "system",
             "content": (
-                "You are a UI/UX expert. Generate HTML/CSS/JS code for the user's UI idea.\n"
-                "You MUST respond using EXACTLY this format:\n\n"
-                "<<CODE>>\n"
-                "[put only the complete UI code here — no prose, no markdown fences]\n"
-                "<</CODE>>\n\n"
-                "<<NOTES>>\n"
-                "[explain layout decisions, design choices, and how to customise the output]\n"
-                "<</NOTES>>"
+                "You are a UI/UX expert. Generate complete HTML/CSS/JS code for the user's UI idea.\n"
+                "Respond in EXACTLY this format — no deviations:\n\n"
+                "```html\n"
+                "<complete UI code only here>\n"
+                "```\n\n"
+                "**Design Notes:**\n"
+                "<explain layout decisions, design choices, and how to customise>"
             )
         },
         {

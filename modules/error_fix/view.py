@@ -2,7 +2,7 @@ import streamlit as st
 from core.llm_handler import LLMHandler
 from core.config import GROQ_MODELS
 from .controller import handle_error_fix
-from utils.helpers import syntax_highlight, parse_structured_response
+from utils.helpers import parse_code_and_notes
 
 
 def error_fix_view():
@@ -21,13 +21,7 @@ def error_fix_view():
     """, unsafe_allow_html=True)
 
     ec1, ec2, ec3, ec4, ec5 = st.columns(5)
-    err_types = {
-        "SyntaxError": ec1,
-        "TypeError": ec2,
-        "KeyError": ec3,
-        "ImportError": ec4,
-        "Other": ec5
-    }
+    err_types = {"SyntaxError": ec1, "TypeError": ec2, "KeyError": ec3, "ImportError": ec4, "Other": ec5}
 
     for name, col in err_types.items():
         with col:
@@ -44,15 +38,11 @@ def error_fix_view():
         </div>
         """, unsafe_allow_html=True)
 
-        code = st.text_area(
-            "code",
-            height=220,
-            placeholder="# paste the broken code here...",
-            label_visibility="hidden"
-        )
+        code = st.text_area("code", height=220,
+                            placeholder="# paste the broken code here...",
+                            label_visibility="hidden")
 
         c1, c2 = st.columns([2, 1])
-
         with c1:
             st.markdown("""
             <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
@@ -60,13 +50,9 @@ def error_fix_view():
                 ◈ &nbsp;Error Description
             </div>
             """, unsafe_allow_html=True)
-
-            error_desc = st.text_input(
-                "err_desc",
-                value=chosen,
-                placeholder="Describe the error or paste the traceback...",
-                label_visibility="hidden"
-            )
+            error_desc = st.text_input("err_desc", value=chosen,
+                                       placeholder="Describe the error or paste the traceback...",
+                                       label_visibility="hidden")
 
         with c2:
             st.markdown("""
@@ -75,39 +61,22 @@ def error_fix_view():
                 ◈ &nbsp;Model
             </div>
             """, unsafe_allow_html=True)
-
             model_options = GROQ_MODELS
             default_model = st.session_state.get("default_model", GROQ_MODELS[0])
-
             try:
                 idx = model_options.index(default_model)
             except ValueError:
                 idx = 0
-
-            model = st.selectbox(
-                "model",
-                model_options,
-                index=idx,
-                label_visibility="hidden"
-            )
+            model = st.selectbox("model", model_options, index=idx, label_visibility="hidden")
 
         submitted = st.form_submit_button("⚡ Diagnose & Fix", use_container_width=False)
 
     if submitted and code:
         llm = LLMHandler(model)
-
-        with st.spinner(""):
-            st.markdown("""
-            <div style="display:flex;align-items:center;gap:.8rem;
-                font-family:'Fira Code',monospace;font-size:.76rem;color:#EF4444;padding:.7rem 0;">
-                <div class="ti"><span></span><span></span><span></span></div>
-                Analyzing error pattern and generating fix...
-            </div>
-            """, unsafe_allow_html=True)
-
+        with st.spinner("Analyzing error pattern and generating fix..."):
             result = handle_error_fix(code, error_desc, model, llm)
 
-        code_part, explanation_part = parse_structured_response(result)
+        code_part, explanation_part = parse_code_and_notes(result)
 
         t1, t2 = st.tabs(["🔧 Corrected Code", "📋 Diagnosis & Explanation"])
 
@@ -119,8 +88,7 @@ def error_fix_view():
                 <span class="badge br" style="margin-left:.4rem;">Fixed</span>
             </div>
             """, unsafe_allow_html=True)
-
-            st.markdown(syntax_highlight(code_part, language="python"), unsafe_allow_html=True)
+            st.code(code_part, language="python")
 
         with t2:
             st.markdown("""
@@ -129,11 +97,8 @@ def error_fix_view():
                 <span class="rl">Root Cause & Explanation</span>
             </div>
             """, unsafe_allow_html=True)
-
-            st.write(explanation_part)
+            st.markdown(explanation_part)
 
     elif submitted and not code:
-        st.markdown(
-            '<div class="ie">⚠ Please paste your code before submitting.</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown('<div class="ie">⚠ Please paste your code before submitting.</div>',
+                    unsafe_allow_html=True)

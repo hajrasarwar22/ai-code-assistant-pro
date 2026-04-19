@@ -2,13 +2,20 @@ import streamlit as st
 from core.llm_handler import LLMHandler
 from core.config import GROQ_MODELS
 from .controller import handle_code_generate
-from utils.helpers import syntax_highlight, parse_structured_response
+from utils.helpers import parse_code_and_notes
 
 LANGS = [
     "Python", "JavaScript", "TypeScript", "React", "FastAPI",
     "Flask", "Node.js", "Go", "Rust", "SQL", "Bash",
     "C++", "Java", "Other"
 ]
+
+LANG_SLUG = {
+    "Python": "python", "JavaScript": "javascript", "TypeScript": "typescript",
+    "React": "jsx", "FastAPI": "python", "Flask": "python", "Node.js": "javascript",
+    "Go": "go", "Rust": "rust", "SQL": "sql", "Bash": "bash",
+    "C++": "cpp", "Java": "java", "Other": "text"
+}
 
 COMPLEXITY = [
     "Simple (< 30 lines)",
@@ -26,7 +33,6 @@ def code_generate_view():
     """, unsafe_allow_html=True)
 
     with st.form("code_generate_form"):
-
         st.markdown("""
         <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
             letter-spacing:.16em;text-transform:uppercase;margin-bottom:.4rem;">
@@ -34,15 +40,11 @@ def code_generate_view():
         </div>
         """, unsafe_allow_html=True)
 
-        purpose = st.text_area(
-            "purpose",
-            height=120,
-            placeholder="e.g. A function that fetches weather data from an API and returns temperature in Celsius...",
-            label_visibility="hidden"
-        )
+        purpose = st.text_area("purpose", height=120,
+                               placeholder="e.g. A function that fetches weather data from an API and returns temperature in Celsius...",
+                               label_visibility="hidden")
 
         c1, c2, c3 = st.columns(3)
-
         with c1:
             st.markdown("""
             <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
@@ -50,7 +52,6 @@ def code_generate_view():
                 ◈ &nbsp;Language
             </div>
             """, unsafe_allow_html=True)
-
             language = st.selectbox("lang", LANGS, label_visibility="hidden")
 
         with c2:
@@ -60,7 +61,6 @@ def code_generate_view():
                 ◈ &nbsp;Complexity
             </div>
             """, unsafe_allow_html=True)
-
             complexity = st.selectbox("cplx", COMPLEXITY, label_visibility="hidden")
 
         with c3:
@@ -70,21 +70,13 @@ def code_generate_view():
                 ◈ &nbsp;Model
             </div>
             """, unsafe_allow_html=True)
-
             model_options = GROQ_MODELS
             default_model = st.session_state.get("default_model", GROQ_MODELS[0])
-
             try:
                 idx = model_options.index(default_model)
             except ValueError:
                 idx = 0
-
-            model = st.selectbox(
-                "model",
-                model_options,
-                index=idx,
-                label_visibility="hidden"
-            )
+            model = st.selectbox("model", model_options, index=idx, label_visibility="hidden")
 
         st.markdown("""
         <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
@@ -92,12 +84,9 @@ def code_generate_view():
             ◈ &nbsp;Constraints / Requirements
         </div>
         """, unsafe_allow_html=True)
-
-        constraints = st.text_input(
-            "constraints",
-            placeholder="e.g. no external libs, async, type hints...",
-            label_visibility="hidden"
-        )
+        constraints = st.text_input("constraints",
+                                    placeholder="e.g. no external libs, async, type hints...",
+                                    label_visibility="hidden")
 
         include_tests = st.checkbox("Also generate unit tests", value=False)
         include_docs = st.checkbox("Include docstrings", value=True)
@@ -105,35 +94,17 @@ def code_generate_view():
         submitted = st.form_submit_button("◎ Generate Code", use_container_width=False)
 
     if submitted and purpose:
-        lang_slug = language.lower().replace(" ", "_").replace("/", "_").replace(".", "").replace("+", "p")
-
+        lang_slug = LANG_SLUG.get(language, "text")
         llm = LLMHandler(model)
-
         answers = {
-            "purpose": purpose,
-            "language": language,
-            "constraints": constraints,
-            "complexity": complexity,
-            "include_tests": include_tests,
-            "include_docs": include_docs,
+            "purpose": purpose, "language": language, "constraints": constraints,
+            "complexity": complexity, "include_tests": include_tests, "include_docs": include_docs,
         }
 
-        with st.spinner(""):
-            st.markdown(f"""
-            <div style="display:flex;align-items:center;gap:.8rem;
-                font-family:'Fira Code',monospace;font-size:.76rem;color:#10B981;padding:.7rem 0;">
-                <div class="ti">
-                    <span style="background:#2563EB"></span>
-                    <span style="background:#2563EB"></span>
-                    <span style="background:#2563EB"></span>
-                </div>
-                Generating {language} code...
-            </div>
-            """, unsafe_allow_html=True)
-
+        with st.spinner(f"Generating {language} code..."):
             result = handle_code_generate(answers, model, llm)
 
-        code_part, explanation_part = parse_structured_response(result)
+        code_part, explanation_part = parse_code_and_notes(result)
 
         st.markdown(f"""
         <div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin:.8rem 0 .3rem;
@@ -153,11 +124,7 @@ def code_generate_view():
                 <span class="rl">Generated Code</span>
             </div>
             """, unsafe_allow_html=True)
-
-            st.markdown(
-                syntax_highlight(code_part, language=lang_slug),
-                unsafe_allow_html=True
-            )
+            st.code(code_part, language=lang_slug)
 
         with t2:
             st.markdown("""
@@ -166,10 +133,8 @@ def code_generate_view():
                 <span class="rl">How It Works</span>
             </div>
             """, unsafe_allow_html=True)
-            st.write(explanation_part)
+            st.markdown(explanation_part)
 
     elif submitted and not purpose:
-        st.markdown(
-            '<div class="ie">⚠ Please describe what the code should do.</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown('<div class="ie">⚠ Please describe what the code should do.</div>',
+                    unsafe_allow_html=True)
