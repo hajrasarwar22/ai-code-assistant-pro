@@ -51,7 +51,7 @@ st.markdown("""
     <div style="font-family:'Oxanium',sans-serif;font-weight:800;font-size:1.35rem;
         letter-spacing:.04em;color:#EDF2F7;">CODE ASSISTANT <span style="color:#3B82F6;">PRO</span></div>
     <div style="font-family:'Fira Code',monospace;font-size:.62rem;color:#4B6280;
-        letter-spacing:.18em;text-transform:uppercase;">Industry-Grade AI Development Suite</div>
+        letter-spacing:.18em;text-transform:uppercase;">AI Development Suite</div>
   </div>
   <div style="margin-left:auto;display:flex;align-items:center;gap:.5rem;">
     <span class="pd"></span>

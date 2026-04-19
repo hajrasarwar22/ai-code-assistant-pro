@@ -1,81 +1,55 @@
-# New Modules to Create
+# Code Assistant Pro
 
-Create these folders inside `modules/`:
-
-## modules/home/
-- view.py  ← copy from home_view.py
-
-## modules/code_explain/
-- __init__.py
-- view.py   ← copy from code_explain_view.py
-- controller.py  (not needed, logic in vieUnicodeDecodeError: 'charmap' codec can't decode byte 0x90 in position 5: character maps to <undefined>
-
-File "D:\FJWU\Course-AI\Project7\main.py", line 12, in <module>
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-                          ~~~~~~^^
-File "C:\Python314\Lib\encodings\cp1252.py", line 23, in decode
-    return codecs.charmap_decode(input,self.errors,decoding_table)[0]
-           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^w)
-
-## modules/code_convert/
-- __init__.py
-- view.py   ← copy from code_convert_view.py
-
-## modules/doc_gen/
-- __init__.py
-- view.py   ← copy from doc_gen_view.py
-
-## modules/test_gen/
-- __init__.py
-- view.py   ← copy from test_gen_view.py
-
-## modules/security_analyzer/
-- __init__.py
-- view.py   ← copy from security_view.py
-
-All new modules call LLMHandler directly in their view.py.
-No separate service.py needed unless you want to add that layer.
-# Code Assistant Chatbot
-
-A professional, modular Python project for an AI-powered code assistant with a modern Streamlit dashboard. Supports error fixing, code improvement, code generation, and UI design assistance using Groq API (multi-model).
+An AI-powered development suite built with Streamlit and the Groq API. Provides 10 AI-driven coding tools through a sleek, modern web dashboard.
 
 ---
 
-## 📁 Folder Structure
+## Features
+
+- **Fix Errors** — Paste broken code and get a corrected version with a root cause diagnosis
+- **Improve Code** — Optimize for performance, readability, security, and testability
+- **Generate Code** — Describe what you need and get production-ready, commented code
+- **UI Designer** — Generate responsive HTML/CSS/JS UI code with design rationale
+- **Code Explainer** — Get structured explanations at beginner, intermediate, or expert level
+- **Code Converter** — Translate code between 16 languages with migration notes
+- **Doc Generator** — Auto-generate docstrings, README sections, and API reference docs
+- **Test Generator** — Create full test suites with edge cases (pytest, Jest, JUnit, and more)
+- **Security Audit** — Scan for vulnerabilities, injection flaws, and insecure patterns
+- **Multi-model support** — Switch between Llama 3.1 8B, Llama 3 70B, and Llama 3 8B
+
+---
+
+## Project Structure
 
 ```
-root/
+code-assistant-pro/
 │
-├── .env
-├── main.py
+├── main.py                  # App entry point, routing, sidebar
 │
-├── modules/
+├── modules/                 # Feature modules (MVC pattern)
+│   ├── home/
 │   ├── error_fix/
-│   │   ├── controller.py
-│   │   ├── service.py
-│   │   ├── view.py
 │   ├── code_improve/
-│   │   ├── controller.py
-│   │   ├── service.py
-│   │   ├── view.py
 │   ├── code_generate/
-│   │   ├── controller.py
-│   │   ├── service.py
-│   │   ├── view.py
 │   ├── ui_design/
-│       ├── controller.py
-│       ├── service.py
-│       ├── view.py
+│   ├── code_explain/
+│   ├── code_convert/
+│   ├── doc_gen/
+│   ├── test_gen/
+│   └── security_analyzer/
 │
 ├── core/
-│   ├── llm_handler.py
-│   ├── config.py
+│   ├── config.py            # Loads env vars, defines supported models
+│   └── llm_handler.py       # Groq API wrapper
 │
 ├── assets/
-│   ├── styles.css
+│   └── styles.css           # Custom UI styling
 │
 ├── utils/
-│   ├── helpers.py
+│   └── helpers.py           # Shared helpers (parsing, display)
+│
+├── .streamlit/
+│   └── config.toml          # Streamlit server config
 │
 ├── requirements.txt
 └── README.md
@@ -83,34 +57,46 @@ root/
 
 ---
 
-## 🚀 Features
-- **Fix Errors:** Paste code + error, get fixes & explanations
-- **Improve Code:** Optimize code, get best practices
-- **Generate Code:** Guided Q&A, full code with comments
-- **UI Design Assistant:** Generate UI code, layout, and suggestions
-- **Multi-model Groq API** (3+ models selectable)
-- **Modern Black & White UI** (light/dark toggle)
-- **Tabs, expanders, copy buttons, syntax highlighting, spinners**
-- **Session state, error handling, responsive layout**
+## Deploy on Streamlit Cloud
+
+1. **Fork or push this repo to GitHub**
+
+2. **Go to [share.streamlit.io](https://share.streamlit.io)** and sign in
+
+3. **Create a new app:**
+   - Repository: your GitHub repo
+   - Branch: `main`
+   - Main file: `main.py`
+
+4. **Add your secret:**
+   - In the Streamlit Cloud dashboard, go to **Settings → Secrets**
+   - Add:
+     ```toml
+     GROQ_API_KEY = "your_groq_api_key_here"
+     ```
+
+5. **Click Deploy** — your app will be live at a `.streamlit.app` URL
+
+> Get a free Groq API key at [console.groq.com](https://console.groq.com)
 
 ---
 
-## 🛠️ Setup Guide
+## Run Locally
 
-1. **Clone the repository**
+1. **Clone the repo**
    ```bash
-   git clone <your-repo-url>
-   cd Project7
+   git clone https://github.com/your-username/code-assistant-pro.git
+   cd code-assistant-pro
    ```
 
-2. **Create and fill `.env`**
-   ```env
-   GROQ_API_KEY=your_groq_api_key_here
-   ```
-
-3. **Install dependencies**
+2. **Install dependencies**
    ```bash
    pip install -r requirements.txt
+   ```
+
+3. **Set your API key** — create a `.env` file:
+   ```env
+   GROQ_API_KEY=your_groq_api_key_here
    ```
 
 4. **Run the app**
@@ -118,46 +104,35 @@ root/
    streamlit run main.py
    ```
 
-5. **(Optional) Run in PyCharm**
-   - Open folder in PyCharm
-   - Mark root as source
-   - Set `main.py` as entry point
-   - Run/Debug
-
 ---
 
-## 📝 .env Example
-```
-GROQ_API_KEY=your_groq_api_key_here
-```
+## Requirements
 
----
-
-## 💡 Usage
-- Use the sidebar to navigate between modules
-- Select LLM model for each task
-- Paste code or answer questions as prompted
-- Copy results with one click
-- Expand explanations for details
-
----
-
-## 📦 Requirements
 - Python 3.10+
-- Streamlit
-- requests
-- python-dotenv
-- pygments
+- `streamlit >= 1.32.0`
+- `requests`
+- `python-dotenv`
+- `Pygments`
+- `pyperclip`
+
+All dependencies are listed in `requirements.txt`.
 
 ---
 
-## ⚠️ Notes
-- Ensure your Groq API key is valid
-- All modules are independent (MVC)
-- UI is fully responsive and production-ready
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| UI | Streamlit |
+| AI Inference | Groq API |
+| Models | Llama 3.1 8B, Llama 3 70B, Llama 3 8B |
+| Language | Python 3.10+ |
 
 ---
 
-## 👨‍💻 Author
-- Built as a professional/final year project
-- Designed for extensibility and real-world use
+## Notes
+
+- Each module is fully independent using an MVC pattern
+- The app reads `GROQ_API_KEY` from environment variables or a `.env` file
+- Code outputs use Streamlit's native code renderer for a VS Code-like experience
+- All explanation and code outputs are cleanly separated into labelled tabs

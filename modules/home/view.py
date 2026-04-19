@@ -7,7 +7,7 @@ def home_view():
     st.markdown("""
     <div class="hero hero-blue">
       <div class="hero-title">Code Assistant Pro</div>
-      <div class="hero-sub">Industry-grade AI toolchain for professional developers</div>
+      <div class="hero-sub">AI Development Suite — 10 tools powered by Groq</div>
     </div>
     """, unsafe_allow_html=True)
 
