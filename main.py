@@ -1,6 +1,5 @@
 import streamlit as st
-
-st.write("Checkpoint 1: App loaded!")  # Debug line
+st.write("Hello, Streamlit!")
 
 st.set_page_config(
     page_title="Code Assistant Pro",
