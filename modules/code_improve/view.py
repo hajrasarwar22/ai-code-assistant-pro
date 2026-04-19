@@ -2,11 +2,10 @@ import streamlit as st
 from core.llm_handler import LLMHandler
 from core.config import GROQ_MODELS
 from .controller import handle_code_improve
-from utils.helpers import syntax_highlight
+from utils.helpers import syntax_highlight, parse_structured_response
 
 
 def code_improve_view():
-    # Hero
     st.markdown("""
     <div class="hero hero-blue">
         <div class="hero-title">🔵 Improve Code</div>
@@ -14,7 +13,6 @@ def code_improve_view():
     </div>
     """, unsafe_allow_html=True)
 
-    # Goal pills
     st.markdown("""
     <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
         letter-spacing:.16em;text-transform:uppercase;margin-bottom:.5rem;">
@@ -42,7 +40,6 @@ def code_improve_view():
         ] if flag
     ]
 
-    # Form
     with st.form("code_improve_form"):
         st.markdown("""
         <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
@@ -68,16 +65,14 @@ def code_improve_view():
             </div>
             """, unsafe_allow_html=True)
 
-            # ✅ FIXED: Using GROQ_MODELS from config
             model_options = GROQ_MODELS
             default_model = st.session_state.get("default_model", GROQ_MODELS[0])
-            
-            # Safe index lookup
+
             try:
                 idx = model_options.index(default_model)
             except ValueError:
                 idx = 0
-            
+
             model = st.selectbox(
                 "model",
                 model_options,
@@ -87,7 +82,6 @@ def code_improve_view():
 
         submitted = st.form_submit_button("✦ Improve Code", use_container_width=False)
 
-    # Processing
     if submitted and code:
         llm = LLMHandler(model)
 
@@ -106,7 +100,8 @@ def code_improve_view():
 
             result = handle_code_improve(code, model, llm)
 
-        # Goal badges
+        code_part, notes_part = parse_structured_response(result)
+
         if goals:
             badges = "".join([f'<span class="badge ba">{g}</span>' for g in goals])
             st.markdown(f"""
@@ -117,7 +112,6 @@ def code_improve_view():
             </div>
             """, unsafe_allow_html=True)
 
-        # Tabs
         t1, t2 = st.tabs(["✦ Improved Code", "📋 Change Summary"])
 
         with t1:
@@ -128,10 +122,16 @@ def code_improve_view():
             </div>
             """, unsafe_allow_html=True)
 
-            st.markdown(syntax_highlight(result, language="python"), unsafe_allow_html=True)
+            st.markdown(syntax_highlight(code_part, language="python"), unsafe_allow_html=True)
 
         with t2:
-            st.write(result)
+            st.markdown("""
+            <div class="rh">
+                <div class="rb rb-a"></div>
+                <span class="rl">Changes Made</span>
+            </div>
+            """, unsafe_allow_html=True)
+            st.write(notes_part)
 
     elif submitted and not code:
         st.markdown(

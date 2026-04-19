@@ -2,11 +2,10 @@ import streamlit as st
 from core.llm_handler import LLMHandler
 from core.config import GROQ_MODELS
 from .controller import handle_error_fix
-from utils.helpers import syntax_highlight
+from utils.helpers import syntax_highlight, parse_structured_response
 
 
 def error_fix_view():
-    # Hero
     st.markdown("""
     <div class="hero hero-blue">
         <div class="hero-title">🔵 Fix Code Errors</div>
@@ -14,7 +13,6 @@ def error_fix_view():
     </div>
     """, unsafe_allow_html=True)
 
-    # Error type quick-select
     st.markdown("""
     <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
         letter-spacing:.16em;text-transform:uppercase;margin-bottom:.45rem;">
@@ -31,16 +29,13 @@ def error_fix_view():
         "Other": ec5
     }
 
-    selected_err = None
     for name, col in err_types.items():
         with col:
             if st.button(name, key=f"err_{name}", use_container_width=True):
-                selected_err = name
                 st.session_state["err_type_selected"] = name
 
     chosen = st.session_state.get("err_type_selected", "")
 
-    # Form
     with st.form("error_fix_form"):
         st.markdown("""
         <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
@@ -81,16 +76,14 @@ def error_fix_view():
             </div>
             """, unsafe_allow_html=True)
 
-            # ✅ FIXED: Using GROQ_MODELS from config
             model_options = GROQ_MODELS
             default_model = st.session_state.get("default_model", GROQ_MODELS[0])
-            
-            # Safe index lookup
+
             try:
                 idx = model_options.index(default_model)
             except ValueError:
                 idx = 0
-            
+
             model = st.selectbox(
                 "model",
                 model_options,
@@ -100,7 +93,6 @@ def error_fix_view():
 
         submitted = st.form_submit_button("⚡ Diagnose & Fix", use_container_width=False)
 
-    # Processing
     if submitted and code:
         llm = LLMHandler(model)
 
@@ -115,7 +107,8 @@ def error_fix_view():
 
             result = handle_error_fix(code, error_desc, model, llm)
 
-        # Tabs
+        code_part, explanation_part = parse_structured_response(result)
+
         t1, t2 = st.tabs(["🔧 Corrected Code", "📋 Diagnosis & Explanation"])
 
         with t1:
@@ -127,7 +120,7 @@ def error_fix_view():
             </div>
             """, unsafe_allow_html=True)
 
-            st.markdown(syntax_highlight(result, language="python"), unsafe_allow_html=True)
+            st.markdown(syntax_highlight(code_part, language="python"), unsafe_allow_html=True)
 
         with t2:
             st.markdown("""
@@ -137,7 +130,7 @@ def error_fix_view():
             </div>
             """, unsafe_allow_html=True)
 
-            st.write(result)
+            st.write(explanation_part)
 
     elif submitted and not code:
         st.markdown(

@@ -1,7 +1,7 @@
 import streamlit as st
 from core.llm_handler import LLMHandler
 from core.config import GROQ_MODELS
-from utils.helpers import syntax_highlight
+from utils.helpers import syntax_highlight, extract_code_block
 
 TEST_FRAMEWORKS = {
     "Python": ["pytest", "unittest", "doctest"],
@@ -32,7 +32,8 @@ def _generate_tests(code, lang, framework, cover_edge, cover_mock, llm_handler):
                 f"You are a senior QA engineer specializing in {lang}. "
                 f"Generate comprehensive {framework} unit tests for the following code. {extra_str} "
                 "Include: happy path tests, failure/error tests, and descriptive test names. "
-                "Add comments explaining what each test validates."
+                "Add comments explaining what each test validates. "
+                "Return ONLY the test code — no prose outside the code, no markdown fences."
             ),
         },
         {
@@ -58,7 +59,6 @@ def test_gen_view():
         unsafe_allow_html=True,
     )
 
-    # ---------------- UI CONTROLS ----------------
     tc1, tc2 = st.columns(2)
 
     with tc1:
@@ -91,7 +91,6 @@ def test_gen_view():
             key="test_fw",
         )
 
-    # ---------------- FORM ----------------
     with st.form("test_gen_form"):
 
         st.markdown(
@@ -124,16 +123,14 @@ def test_gen_view():
                 unsafe_allow_html=True,
             )
 
-            # ✅ FIXED: Using GROQ_MODELS from config
             model_options = GROQ_MODELS
             default_model = st.session_state.get("default_model", GROQ_MODELS[0])
-            
-            # Safe index lookup
+
             try:
                 idx = model_options.index(default_model)
             except ValueError:
                 idx = 0
-            
+
             model = st.selectbox(
                 "model",
                 model_options,
@@ -143,7 +140,6 @@ def test_gen_view():
 
         submitted = st.form_submit_button("🧪 Generate Tests")
 
-    # ---------------- RESULT ----------------
     if submitted and code:
 
         llm = LLMHandler(model)
@@ -164,6 +160,7 @@ def test_gen_view():
 
             result = _generate_tests(code, lang, fw, cover_edge, cover_mock, llm)
 
+        test_code = extract_code_block(result)
         lang_slug = lang.lower().replace(" ", "_")
 
         st.markdown(
@@ -180,7 +177,7 @@ def test_gen_view():
         )
 
         st.markdown(
-            syntax_highlight(result, language=lang_slug),
+            syntax_highlight(test_code, language=lang_slug),
             unsafe_allow_html=True,
         )
 

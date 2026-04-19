@@ -1,7 +1,7 @@
 import streamlit as st
 from core.llm_handler import LLMHandler
 from core.config import GROQ_MODELS
-from utils.helpers import syntax_highlight
+from utils.helpers import syntax_highlight, parse_structured_response
 
 LANGS = [
     "Python", "JavaScript", "TypeScript", "Java", "C++", "C#",
@@ -18,7 +18,13 @@ def _convert_code(code, src, dst, preserve_comments, llm_handler):
                 f"You are an expert multilingual programmer. Convert the following {src} code to {dst}. "
                 f"Preserve all logic and idiomatic {dst} patterns. "
                 + ("Preserve comments and docstrings." if preserve_comments else "Omit comments.")
-                + " After code, provide migration notes."
+                + "\nYou MUST respond using EXACTLY this format:\n\n"
+                "<<CODE>>\n"
+                "[put only the converted code here — no prose, no markdown fences]\n"
+                "<</CODE>>\n\n"
+                "<<NOTES>>\n"
+                "[migration notes: key differences, library equivalents, anything the dev should know]\n"
+                "<</NOTES>>"
             )
         },
         {
@@ -30,7 +36,6 @@ def _convert_code(code, src, dst, preserve_comments, llm_handler):
 
 
 def code_convert_view():
-    # Hero
     st.markdown("""
     <div class="hero hero-blue">
         <div class="hero-title">🔵 Code Converter</div>
@@ -38,7 +43,6 @@ def code_convert_view():
     </div>
     """, unsafe_allow_html=True)
 
-    # From / To selectors
     fc1, arrow_col, fc2 = st.columns([5, 1, 5])
 
     with fc1:
@@ -76,7 +80,6 @@ def code_convert_view():
             key="conv_dst"
         )
 
-    # Form
     with st.form("code_convert_form"):
         st.markdown("""
         <div style="font-family:'Fira Code',monospace;font-size:.63rem;color:#4B6280;
@@ -108,16 +111,14 @@ def code_convert_view():
             </div>
             """, unsafe_allow_html=True)
 
-            # ✅ FIXED: Using GROQ_MODELS from config
             model_options = GROQ_MODELS
             default_model = st.session_state.get("default_model", GROQ_MODELS[0])
-            
-            # Safe index lookup
+
             try:
                 idx = model_options.index(default_model)
             except ValueError:
                 idx = 0
-            
+
             model = st.selectbox(
                 "model",
                 model_options,
@@ -127,7 +128,6 @@ def code_convert_view():
 
         submitted = st.form_submit_button("🔄 Convert Code", use_container_width=False)
 
-    # Processing
     if submitted and code:
 
         if src_lang == dst_lang:
@@ -154,6 +154,7 @@ def code_convert_view():
 
             result = _convert_code(code, src_lang, dst_lang, preserve_comments, llm)
 
+        code_part, notes_part = parse_structured_response(result)
         dst_slug = dst_lang.lower().replace(" ", "_").replace("#", "sharp").replace("+", "p")
 
         t1, t2 = st.tabs([f"🔄 {dst_lang} Code", "📋 Migration Notes"])
@@ -167,12 +168,18 @@ def code_convert_view():
             """, unsafe_allow_html=True)
 
             st.markdown(
-                syntax_highlight(result, language=dst_slug),
+                syntax_highlight(code_part, language=dst_slug),
                 unsafe_allow_html=True
             )
 
         with t2:
-            st.write(result)
+            st.markdown("""
+            <div class="rh">
+                <div style="width:3px;height:20px;border-radius:2px;background:#0D9488;"></div>
+                <span class="rl">Migration Notes</span>
+            </div>
+            """, unsafe_allow_html=True)
+            st.write(notes_part)
 
     elif submitted and not code:
         st.markdown(

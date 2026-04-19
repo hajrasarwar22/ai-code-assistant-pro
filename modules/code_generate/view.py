@@ -2,7 +2,7 @@ import streamlit as st
 from core.llm_handler import LLMHandler
 from core.config import GROQ_MODELS
 from .controller import handle_code_generate
-from utils.helpers import syntax_highlight
+from utils.helpers import syntax_highlight, parse_structured_response
 
 LANGS = [
     "Python", "JavaScript", "TypeScript", "React", "FastAPI",
@@ -18,7 +18,6 @@ COMPLEXITY = [
 
 
 def code_generate_view():
-    # Hero
     st.markdown("""
     <div class="hero hero-blue">
         <div class="hero-title">🔵 Generate Code</div>
@@ -26,7 +25,6 @@ def code_generate_view():
     </div>
     """, unsafe_allow_html=True)
 
-    # Form
     with st.form("code_generate_form"):
 
         st.markdown("""
@@ -73,16 +71,14 @@ def code_generate_view():
             </div>
             """, unsafe_allow_html=True)
 
-            # ✅ FIXED: Using GROQ_MODELS from config
             model_options = GROQ_MODELS
             default_model = st.session_state.get("default_model", GROQ_MODELS[0])
-            
-            # Safe index lookup
+
             try:
                 idx = model_options.index(default_model)
             except ValueError:
                 idx = 0
-            
+
             model = st.selectbox(
                 "model",
                 model_options,
@@ -108,7 +104,6 @@ def code_generate_view():
 
         submitted = st.form_submit_button("◎ Generate Code", use_container_width=False)
 
-    # Processing
     if submitted and purpose:
         lang_slug = language.lower().replace(" ", "_").replace("/", "_").replace(".", "").replace("+", "p")
 
@@ -138,7 +133,8 @@ def code_generate_view():
 
             result = handle_code_generate(answers, model, llm)
 
-        # Meta row
+        code_part, explanation_part = parse_structured_response(result)
+
         st.markdown(f"""
         <div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin:.8rem 0 .3rem;
             font-family:'Fira Code',monospace;font-size:.65rem;color:#4B6280;letter-spacing:.1em;">
@@ -159,12 +155,18 @@ def code_generate_view():
             """, unsafe_allow_html=True)
 
             st.markdown(
-                syntax_highlight(result, language=lang_slug),
+                syntax_highlight(code_part, language=lang_slug),
                 unsafe_allow_html=True
             )
 
         with t2:
-            st.write(result)
+            st.markdown("""
+            <div class="rh">
+                <div class="rb rb-g"></div>
+                <span class="rl">How It Works</span>
+            </div>
+            """, unsafe_allow_html=True)
+            st.write(explanation_part)
 
     elif submitted and not purpose:
         st.markdown(

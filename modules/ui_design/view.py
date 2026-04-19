@@ -2,7 +2,7 @@ import streamlit as st
 from core.llm_handler import LLMHandler
 from core.config import GROQ_MODELS
 from .controller import handle_ui_design
-from utils.helpers import syntax_highlight
+from utils.helpers import syntax_highlight, parse_structured_response
 
 PRESETS = [
     "Custom...", "Login / Auth Page", "Admin Dashboard", "Landing Page",
@@ -29,7 +29,6 @@ def ui_design_view():
         unsafe_allow_html=True,
     )
 
-    # ---------------- PRESET ----------------
     st.markdown(
         """<div style="font-family:'Fira Code',monospace;font-size:.63rem;
         color:#4B6280;letter-spacing:.16em;text-transform:uppercase;
@@ -44,7 +43,6 @@ def ui_design_view():
         key="ui_preset"
     )
 
-    # ---------------- DESIGN PREFERENCES ----------------
     pc1, pc2, pc3 = st.columns(3)
 
     with pc1:
@@ -74,7 +72,6 @@ def ui_design_view():
         )
         fw_pref = st.selectbox("framework", FRAMEWORKS, label_visibility="hidden", key="ui_fw")
 
-    # ---------------- FORM ----------------
     with st.form("ui_design_form"):
 
         st.markdown(
@@ -104,16 +101,14 @@ def ui_design_view():
                 unsafe_allow_html=True,
             )
 
-            # ✅ FIXED: Using GROQ_MODELS from config
             model_options = GROQ_MODELS
             default_model = st.session_state.get("default_model", GROQ_MODELS[0])
-            
-            # Safe index lookup
+
             try:
                 idx = model_options.index(default_model)
             except ValueError:
                 idx = 0
-            
+
             model = st.selectbox(
                 "model",
                 model_options,
@@ -126,7 +121,6 @@ def ui_design_view():
 
         submitted = st.form_submit_button("◐ Generate UI")
 
-    # ---------------- RESULT ----------------
     if submitted and user_idea:
 
         enriched = (
@@ -153,7 +147,8 @@ def ui_design_view():
 
             result = handle_ui_design(enriched, model, llm)
 
-        # ---------------- INFO BAR ----------------
+        code_part, notes_part = parse_structured_response(result)
+
         st.markdown(
             f"""
             <div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin:.8rem 0 .3rem;
@@ -167,7 +162,6 @@ def ui_design_view():
             unsafe_allow_html=True,
         )
 
-        # ---------------- TABS ----------------
         t1, t2 = st.tabs(["◐ UI Code", "💡 Design Notes"])
 
         with t1:
@@ -178,12 +172,17 @@ def ui_design_view():
             )
 
             st.markdown(
-                syntax_highlight(result, language="html"),
+                syntax_highlight(code_part, language="html"),
                 unsafe_allow_html=True,
             )
 
         with t2:
-            st.write(result)
+            st.markdown(
+                """<div class="rh"><div class="rb rb-b"></div>
+                <span class="rl">Design Notes</span></div>""",
+                unsafe_allow_html=True,
+            )
+            st.write(notes_part)
 
     elif submitted and not user_idea:
         st.markdown(
