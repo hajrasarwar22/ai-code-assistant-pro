@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.write("App loaded!")  # Debug line
+st.write("Checkpoint 1: App loaded!")  # Debug line
 
 st.set_page_config(
     page_title="Code Assistant Pro",
@@ -10,57 +10,69 @@ st.set_page_config(
 )
 
 # ── CSS ───────────────────────────────────────────────────────────────────────
-with open("assets/styles.css", encoding="utf-8") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+try:
+    with open("assets/styles.css", encoding="utf-8") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    st.write("Checkpoint 2: CSS loaded!")
+except Exception as e:
+    st.write(f"Could not load CSS: {e}")
 
 # ── Lazy imports (only load the selected module) ──────────────────────────────
 def _load_view(name):
-    if name == "Home":
-        from modules.home.view import home_view; return home_view
-    elif name == "Fix Errors":
-        from modules.error_fix.view import error_fix_view; return error_fix_view
-    elif name == "Improve Code":
-        from modules.code_improve.view import code_improve_view; return code_improve_view
-    elif name == "Generate Code":
-        from modules.code_generate.view import code_generate_view; return code_generate_view
-    elif name == "UI Designer":
-        from modules.ui_design.view import ui_design_view; return ui_design_view
-    elif name == "Code Explainer":
-        from modules.code_explain.view import code_explain_view; return code_explain_view
-    elif name == "Code Converter":
-        from modules.code_convert.view import code_convert_view; return code_convert_view
-    elif name == "Doc Generator":
-        from modules.doc_gen.view import doc_gen_view; return doc_gen_view
-    elif name == "Test Generator":
-        from modules.test_gen.view import test_gen_view; return test_gen_view
-    elif name == "Security Audit":
-        from modules.security_analyzer.view import security_view; return security_view
+    st.write(f"Checkpoint 3: Loading view for {name}")
+    try:
+        if name == "Home":
+            from modules.home.view import home_view; st.write("Checkpoint 3a: Home loaded"); return home_view
+        elif name == "Fix Errors":
+            from modules.error_fix.view import error_fix_view; st.write("Checkpoint 3b: Error Fix loaded"); return error_fix_view
+        elif name == "Improve Code":
+            from modules.code_improve.view import code_improve_view; st.write("Checkpoint 3c: Code Improve loaded"); return code_improve_view
+        elif name == "Generate Code":
+            from modules.code_generate.view import code_generate_view; st.write("Checkpoint 3d: Code Generate loaded"); return code_generate_view
+        elif name == "UI Designer":
+            from modules.ui_design.view import ui_design_view; st.write("Checkpoint 3e: UI Designer loaded"); return ui_design_view
+        elif name == "Code Explainer":
+            from modules.code_explain.view import code_explain_view; st.write("Checkpoint 3f: Code Explainer loaded"); return code_explain_view
+        elif name == "Code Converter":
+            from modules.code_convert.view import code_convert_view; st.write("Checkpoint 3g: Code Converter loaded"); return code_convert_view
+        elif name == "Doc Generator":
+            from modules.doc_gen.view import doc_gen_view; st.write("Checkpoint 3h: Doc Generator loaded"); return doc_gen_view
+        elif name == "Test Generator":
+            from modules.test_gen.view import test_gen_view; st.write("Checkpoint 3i: Test Generator loaded"); return test_gen_view
+        elif name == "Security Audit":
+            from modules.security_analyzer.view import security_view; st.write("Checkpoint 3j: Security Audit loaded"); return security_view
+    except Exception as e:
+        st.write(f"Error loading view {name}: {e}")
+    return None
 
 # ── Session defaults ──────────────────────────────────────────────────────────
 for k, v in [("theme","dark"), ("default_model","llama2-70b-4096"), ("session_count", 0)]:
     if k not in st.session_state:
         st.session_state[k] = v
+st.write("Checkpoint 4: Session defaults set!")
 
 # ── Top banner ────────────────────────────────────────────────────────────────
+st.write("Checkpoint 5: Before top banner!")
 st.markdown("""
 <div style="display:flex;align-items:center;gap:1rem;
-    padding:.9rem 0 1.4rem;border-bottom:1px solid #1A2840;margin-bottom:1.6rem;">
-  <div style="width:40px;height:40px;
-      background:linear-gradient(135deg,#1D4ED8,#2563EB);
-      border-radius:10px;display:flex;align-items:center;justify-content:center;
-      font-size:1.2rem;box-shadow:0 0 24px rgba(37,99,235,.5);">⬡</div>
-  <div>
-    <div style="font-family:'Oxanium',sans-serif;font-weight:800;font-size:1.35rem;
-        letter-spacing:.04em;color:#EDF2F7;">CODE ASSISTANT <span style="color:#3B82F6;">PRO</span></div>
-    <div style="font-family:'Fira Code',monospace;font-size:.62rem;color:#4B6280;
-        letter-spacing:.18em;text-transform:uppercase;">AI Development Suite</div>
-  </div>
-  <div style="margin-left:auto;display:flex;align-items:center;gap:.5rem;">
-    <span class="pd"></span>
-    <span style="font-family:'Fira Code',monospace;font-size:.65rem;color:#4B6280;letter-spacing:.12em;">ONLINE</span>
-  </div>
+        padding:.9rem 0 1.4rem;border-bottom:1px solid #1A2840;margin-bottom:1.6rem;">
+    <div style="width:40px;height:40px;
+            background:linear-gradient(135deg,#1D4ED8,#2563EB);
+            border-radius:10px;display:flex;align-items:center;justify-content:center;
+            font-size:1.2rem;box-shadow:0 0 24px rgba(37,99,235,.5);">⬡</div>
+    <div>
+        <div style="font-family:'Oxanium',sans-serif;font-weight:800;font-size:1.35rem;
+                letter-spacing:.04em;color:#EDF2F7;">CODE ASSISTANT <span style="color:#3B82F6;">PRO</span></div>
+        <div style="font-family:'Fira Code',monospace;font-size:.62rem;color:#4B6280;
+                letter-spacing:.18em;text-transform:uppercase;">AI Development Suite</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:.5rem;">
+        <span class="pd"></span>
+        <span style="font-family:'Fira Code',monospace;font-size:.65rem;color:#4B6280;letter-spacing:.12em;">ONLINE</span>
+    </div>
 </div>
 """, unsafe_allow_html=True)
+st.write("Checkpoint 6: After top banner!")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 PAGES = [
@@ -76,6 +88,7 @@ PAGES = [
     "Security Audit",
 ]
 
+st.write("Checkpoint 7: Before sidebar!")
 with st.sidebar:
     st.markdown("""
     <div style="font-family:'Fira Code',monospace;font-size:.6rem;letter-spacing:.2em;
@@ -84,6 +97,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     menu = st.radio("nav", PAGES, key="nav_radio", label_visibility="hidden")
+    st.write("Checkpoint 8: Sidebar menu loaded!")
 
     st.markdown("<div style='margin:.9rem 0;border-top:1px solid #1A2840;'></div>", unsafe_allow_html=True)
 
@@ -94,6 +108,7 @@ with st.sidebar:
         ["llama-3.1-8b-instant", "llama3-70b-8192", "llama3-8b-8192"],
         key="global_model", label_visibility="hidden")
     st.session_state["default_model"] = default_model
+    st.write("Checkpoint 9: Default model set!")
 
     st.markdown("<div style='margin:.9rem 0;border-top:1px solid #1A2840;'></div>", unsafe_allow_html=True)
 
@@ -111,6 +126,7 @@ with st.sidebar:
     if st.button("⇄  Toggle Theme", use_container_width=True):
         st.session_state["theme"] = "light" if st.session_state["theme"] == "dark" else "dark"
         st.rerun()
+    st.write("Checkpoint 10: Sidebar end!")
 
     st.markdown("""
     <div style="margin-top:1rem;font-family:'Fira Code',monospace;
@@ -119,6 +135,10 @@ with st.sidebar:
     </div>""", unsafe_allow_html=True)
 
 # ── Render selected page ──────────────────────────────────────────────────────
+st.write("Checkpoint 11: Before loading view function!")
 view_fn = _load_view(menu)
+st.write("Checkpoint 12: After loading view function!")
 if view_fn:
+    st.write("Checkpoint 13: Calling view function!")
     view_fn()
+st.write("Checkpoint 14: End of main.py!")
